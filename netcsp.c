@@ -29,26 +29,14 @@ void o_mode(int sock)
 
 void io_mode(int sock)
 {
-    char c;
-    while (!feof(stdin)) {
-        c = fgetc(stdin);
-        write(sock, &c, 1);
-    }
-    while (read(sock, &c, 1) > 0) {
-        fputc(c, stdout);
-    }
+    i_mode(sock);
+    o_mode(sock);
 }
 
 void oi_mode(int sock)
 {
-    char c;
-    while (read(sock, &c, 1) > 0) {
-        fputc(c, stdout);
-    }
-    while (!feof(stdin)) {
-        c = fgetc(stdin);
-        write(sock, &c, 1);
-    }
+    o_mode(sock);
+    i_mode(sock);
 }
 
 /*class private var*/
