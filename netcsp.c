@@ -163,6 +163,7 @@ int main(int ac, char **av)
         exit(1);
     }
     
+    mode = av[1];
     //client mode
     if (mode_find("-c", mode) && ac == 4) {
         ip = av[2];
