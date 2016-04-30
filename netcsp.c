@@ -169,16 +169,17 @@ int main(int ac, char **av)
         ip = av[2];
         port = av[3];
         client(ip, port, mode);
+        return 0;
     }
     //server mode
-    mode = av[1];
     if (mode_find("-s", mode) && ac == 3) {
         ip = NULL;
         port = av[2];
         server(port, mode);
+        return 0;
     }
     
-    return 0;
+    return 1;
 }
 
 
