@@ -24,11 +24,12 @@ enum { LEA ,IMM ,JMP ,JSR ,JZ  ,JNZ ,ENT ,ADJ ,LEV ,LI  ,LC  ,SI  ,SC  ,PSH ,
     OPEN,READ,CLOS,PRTF,MALC,MSET,MCMP,EXIT };
 
 
-int machine(int *pc, int *sp, int debug){
+int machine(int *cs, char *ds, int *ss, int debug){
     
-    int opcode, cycle, ax, *bp, *tmp;
+    int opcode, cycle, ax, *pc, *sp, *bp, *tmp;
     
-    bp = sp;
+    pc = cs;
+    bp = sp = ss;
     ax = 0;
     
     cycle = 0;
@@ -221,8 +222,6 @@ int machine(int *pc, int *sp, int debug){
     return 0;
 }
 
-//gcc vm.c -o vm -m32 -ansi
-//./vm
 int main(int ac, char **av)
 {
     int i, *tmp;
@@ -266,7 +265,7 @@ int main(int ac, char **av)
     data[i++] = 'd';
     data[i++] = '!';
     data[i++] = '\n';
-    i = 0
+    i = 0;
     text[i++] = IMM;
     text[i++] = (int)data;
     text[i++] = PSH;
@@ -286,7 +285,7 @@ int main(int ac, char **av)
     text[i++] = PSH;
     text[i++] = EXIT;
     
-    machine(text, stack, DEBUG);
+    machine(text, data, stack, DEBUG);
     
     return 0;
 }
