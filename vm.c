@@ -222,6 +222,8 @@ int machine(int *cs, char *ds, int *ss, int debug){
     return 0;
 }
 
+//gcc vm.c -o vm -m32 -ansi
+//./vm
 int main(int ac, char **av)
 {
     int i, *tmp;
