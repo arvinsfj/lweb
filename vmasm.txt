@@ -1,0 +1,23 @@
+IMM "Hello, World!\n"
+PSH
+PRTF
+ADJ 1
+IMM "Hello, World ASM!\n"
+PSH
+PRTF
+ADJ 1
+IMM "SUM(100 * 200 + 400) = %d\n"
+PSH
+IMM 100
+PSH
+IMM 200
+MUL
+PSH
+IMM 400
+ADD
+PSH
+PRTF
+ADJ 2
+IMM 0
+PSH
+EXIT

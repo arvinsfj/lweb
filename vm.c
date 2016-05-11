@@ -1,6 +1,6 @@
 //
 //  vm.c
-//  
+//
 //
 //  Created by cz on 5/10/16.
 //
@@ -12,7 +12,6 @@
 #include <memory.h>
 
 #define poolsize (256 * 1024)
-#define DEBUG 1
 
 int *stack;
 char *data;
@@ -222,72 +221,112 @@ int machine(int *cs, char *ds, int *ss, int debug){
     return 0;
 }
 
+void eval(char *src)
+{
+    char *opcodes = "LEA ,IMM ,JMP ,JSR ,JZ  ,JNZ ,ENT ,ADJ ,LEV ,LI  ,LC  ,SI  ,SC  ,PSH ,"
+    "OR  ,XOR ,AND ,EQ  ,NE  ,LT  ,GT  ,LE  ,GE  ,SHL ,SHR ,ADD ,SUB ,MUL ,DIV ,MOD ,"
+    "OPEN,READ,CLOS,PRTF,MALC,MSET,MCMP,EXIT,";
+    
+    char c;int i = 0;int ii = 0;
+    char *token = malloc(5);
+    while (!(*src >= 'A' && *src <= 'Z') && *src != '\0') {
+        src++;
+    }
+    while ((c = *src++) != '\0') {
+        if (c != ' ' && c != '\n') {
+            token[i++] = c;
+        }else{
+            token[i] = '\0';
+            i = 0;
+            char *p = strstr(opcodes, token);
+            int opcode = (p - opcodes) / 5;
+            text[ii++] = opcode;
+            
+            if (c == ' ') {
+                while (*src == ' ') {
+                    src++;
+                }
+                char startc = *src++;
+                if (startc == '\"' || startc == '\'') {
+                    char *str = data;int count = 0;
+                    char *p = str;
+                    while ((c = *src++) != startc) {
+                        if (c != '\\') {
+                            *p++ = c;
+                        }else{
+                            *p++ = '\n';
+                            src++;
+                        }
+                        count++;
+                    }
+                    *p = '\0';count++;data = (char *)((int)data + count);
+                    text[ii++] = (int)str;
+                }else if (startc >= '0' && startc <= '9'){
+                    int ival = 0;
+                    if ((ival = startc - '0') != 0) {
+                        while (*src >= '0' && *src <= '9') ival = ival * 10 + (*src++ - '0');
+                    }
+                    else if (*src == 'x' || *src == 'X') {
+                        char tk;
+                        while ((tk = *++src) && ((tk >= '0' && tk <= '9') || (tk >= 'a' && tk <= 'f') || (tk >= 'A' && tk <= 'F')))
+                            ival = ival * 16 + (tk & 15) + (tk >= 'A' ? 9 : 0);
+                    }
+                    else { while (*src >= '0' && *src <= '7') ival = ival * 8 + (*src++ - '0'); }
+                    text[ii++] = ival;
+                }
+            }
+            while (!(*src >= 'A' && *src <= 'Z') && *src != '\0') {
+                src++;
+            }
+        }
+    }
+}
+
+char* readasm()
+{
+    
+    char *asmsrc = malloc(poolsize);
+    memset(asmsrc, 0, poolsize);
+    
+    char *tmp = asmsrc;
+    int i = 0;
+    while(!feof(stdin)){
+        tmp[i++] = fgetc(stdin);
+    }
+    return asmsrc;
+}
+
 //gcc vm.c -o vm -m32 -ansi
-//./vm
+//cat asm.txt | ./vm -d
 int main(int ac, char **av)
 {
-    int i, *tmp;
+    int debug = 0;
+    
+    if (ac == 2 && !strcmp(av[1], "-d")) {
+        debug = 1;
+    }
+    
+    int *tmp;
     // allocate memory for virtual machine
-    if (!(text = malloc(poolsize))) {
-        printf("could not malloc(%d) for text area\n", poolsize);
+    if (!(text = malloc(poolsize * 3))) {
+        printf("could not malloc(%d) for program memory\n", poolsize * 3);
         return -1;
     }
-    if (!(data = malloc(poolsize))) {
-        printf("could not malloc(%d) for data area\n", poolsize);
-        return -1;
-    }
-    if (!(stack = malloc(poolsize))) {
-        printf("could not malloc(%d) for stack area\n", poolsize);
-        return -1;
-    }
-    memset(text, 0, poolsize);
-    memset(data, 0, poolsize);
-    memset(stack, 0, poolsize);
+    memset(text, 0, poolsize * 3);
+    data = (char *)((int)text + poolsize);
+    stack = (int *)((int)data + poolsize * 2);//high addr -> low addr
     
     //setup stack
-    stack = (int *)((int)stack + poolsize);
     *--stack = EXIT; // call exit if main returns
     *--stack = PSH; tmp = stack;
     *--stack = ac;
     *--stack = (int)av;
     *--stack = (int)tmp;
     
-    //test vm asm
-    i = 0;
-    data[i++] = 'H';
-    data[i++] = 'o';
-    data[i++] = 'l';
-    data[i++] = 'l';
-    data[i++] = 'e';
-    data[i++] = ' ';
-    data[i++] = 'W';
-    data[i++] = 'o';
-    data[i++] = 'r';
-    data[i++] = 'l';
-    data[i++] = 'd';
-    data[i++] = '!';
-    data[i++] = '\n';
-    i = 0;
-    text[i++] = IMM;
-    text[i++] = (int)data;
-    text[i++] = PSH;
-    text[i++] = PRTF;
-    text[i++] = ADJ;
-    text[i++] = 1;
-    text[i++] = IMM;
-    text[i++] = 100;
-    text[i++] = PSH;
-    text[i++] = IMM;
-    text[i++] = 200;
-    text[i++] = PSH;
-    text[i++] = IMM;
-    text[i++] = 400;
-    text[i++] = ADD;
-    text[i++] = ADD;
-    text[i++] = PSH;
-    text[i++] = EXIT;
     
-    machine(text, data, stack, DEBUG);
+    eval(readasm());
+    
+    machine(text, data, stack, debug);
     
     return 0;
 }
